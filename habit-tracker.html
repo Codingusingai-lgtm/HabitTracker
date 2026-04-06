@@ -1,0 +1,280 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Habit Tracker</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg-primary:#0a0a0f;--bg-secondary:#12121a;--bg-card:rgba(255,255,255,0.03);--border:rgba(255,255,255,0.08);--text-primary:#e8e8ec;--text-secondary:rgba(228,228,236,0.5);--accent:#6366f1;--accent-light:#8b5cf6;--success:#22c55e;--danger:#ef4444;--warning:#f59e0b;--radius:12px;--radius-sm:8px;--gap:12px;--pad:16px}
+body.compact{--gap:8px;--pad:12px;--radius:8px;--radius-sm:6px}
+body.compact .card{padding:14px}
+body.compact .card-title{margin-bottom:12px;font-size:1rem}
+body.compact .stat-value{font-size:1.8rem}
+body{font-family:Inter,sans-serif;background:var(--bg-primary);min-height:100vh;color:var(--text-primary);line-height:1.4}
+.container{max-width:1400px;margin:0 auto;padding:var(--pad)}
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap);padding-bottom:var(--gap);border-bottom:1px solid var(--border)}
+.logo{font-size:1.5rem;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-tabs{display:flex;gap:4px;background:var(--bg-secondary);padding:4px;border-radius:var(--radius)}
+.nav-tab{padding:8px 16px;border-radius:var(--radius-sm);cursor:pointer;font-size:.875rem;font-weight:500;color:var(--text-secondary);transition:all .2s;border:none;background:transparent}
+.nav-tab:hover{color:var(--text-primary)}
+.nav-tab.active{background:var(--accent);color:white}
+.main-layout{display:grid;gap:var(--gap)}
+.main-layout.sidebar-right{grid-template-columns:1fr 300px}
+.main-layout.sidebar-left{grid-template-columns:300px 1fr}
+.main-layout.single{grid-template-columns:1fr;max-width:800px;margin:0 auto}
+@media(max-width:1000px){.main-layout.sidebar-right,.main-layout.sidebar-left{grid-template-columns:1fr}}
+.card{background:var(--bg-card);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:var(--radius);padding:var(--pad)}
+.card-title{font-size:1.1rem;font-weight:600;margin-bottom:var(--pad);display:flex;align-items:center;gap:8px}
+.card-title-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent),var(--accent-light));border-radius:var(--radius-sm);font-size:.9rem}
+.module{margin-bottom:var(--gap)}
+.calendar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--pad)}
+.calendar-nav{display:flex;align-items:center;gap:8px}
+.month-year{font-size:1.1rem;font-weight:600;min-width:140px;text-align:center}
+.btn-icon{width:32px;height:32px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .15s}
+.btn-icon:hover{border-color:var(--accent);color:var(--accent)}
+.btn{padding:10px 18px;background:linear-gradient(135deg,var(--accent),var(--accent-light));color:white;border:none;border-radius:var(--radius-sm);font-size:.875rem;font-weight:500;cursor:pointer;transition:all .15s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(99,102,241,0.3)}
+.btn-sm{padding:6px 12px;font-size:.8rem}
+.btn-secondary{background:var(--bg-secondary);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--accent)}
+.btn-danger{background:var(--danger)}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.day-label{text-align:center;font-size:.7rem;font-weight:600;color:var(--text-secondary);padding:8px 4px;text-transform:uppercase;letter-spacing:.05em}
+.calendar-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg-secondary);border-radius:var(--radius);cursor:pointer;transition:all .15s;border:1px solid transparent;position:relative}
+.calendar-day:hover{border-color:var(--accent);transform:translateY(-1px)}
+.calendar-day.today{background:linear-gradient(135deg,var(--accent),var(--accent-light));color:white}
+.calendar-day.selected{border-color:var(--accent);box-shadow:0 0 0 2px rgba(99,102,241,0.2)}
+.calendar-day.other-month{opacity:.3}
+.day-number{font-size:.875rem;font-weight:500}
+.day-dots{display:flex;gap:2px;margin-top:4px;flex-wrap:wrap;justify-content:center}
+.dot{width:4px;height:4px;border-radius:50%;background:var(--success)}
+.habit-input-row{display:flex;gap:8px;margin-bottom:var(--pad)}
+input,select{flex:1;padding:10px 14px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.875rem;color:var(--text-primary)}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+.habit-list{display:flex;flex-direction:column;gap:8px}
+.habit-item{display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);transition:all .15s}
+.habit-main{display:flex;align-items:center;gap:12px;flex:1}
+.habit-check{width:24px;height:24px;border-radius:6px;border:2px solid var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.habit-check:hover{background:rgba(99,102,241,0.1)}
+.habit-check.checked{background:var(--success);border-color:var(--success)}
+.habit-check.checked::after{content:"✓";color:white;font-size:12px;font-weight:bold}
+.habit-name{font-size:.9rem;font-weight:500}
+.habit-name.done{text-decoration:line-through;color:var(--text-secondary)}
+.habit-meta{display:flex;align-items:center;gap:8px}
+.habit-streak{display:flex;align-items:center;gap:4px;font-size:.75rem;font-weight:600;color:var(--warning);background:rgba(245,158,11,0.1);padding:4px 10px;border-radius:20px}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--gap)}
+.stat-card{background:var(--bg-secondary);border:1px solid var(--border);padding:var(--pad);border-radius:var(--radius);text-align:center}
+.stat-value{font-size:1.75rem;font-weight:700;color:var(--accent);line-height:1}
+.stat-label{font-size:.75rem;color:var(--text-secondary);margin-top:6px;text-transform:uppercase;letter-spacing:.05em}
+.empty-state{text-align:center;padding:40px;color:var(--text-secondary)}
+.empty-state-icon{font-size:2.5rem;margin-bottom:12px;opacity:.5}
+.settings-panel{position:fixed;top:0;right:-400px;width:360px;height:100vh;background:var(--bg-secondary);border-left:1px solid var(--border);z-index:1000;transition:right .3s ease;overflow-y:auto}
+.settings-panel.open{right:0}
+.settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;opacity:0;pointer-events:none;transition:opacity .3s}
+.settings-overlay.open{opacity:1;pointer-events:auto}
+.settings-header{display:flex;align-items:center;justify-content:space-between;padding:var(--pad);border-bottom:1px solid var(--border)}
+.settings-title{font-size:1.1rem;font-weight:600}
+.settings-content{padding:var(--pad)}
+.setting-item{margin-bottom:20px}
+.setting-label{display:block;font-size:.8rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.setting-options{display:flex;flex-wrap:wrap;gap:8px}
+.option-btn{padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:.8rem;cursor:pointer;transition:all .15s}
+.option-btn:hover{border-color:var(--accent);color:var(--text-primary)}
+.option-btn.active{background:var(--accent);border-color:var(--accent);color:white}
+.chat-messages{max-height:200px;overflow-y:auto;margin-bottom:var(--pad);display:flex;flex-direction:column;gap:8px}
+.chat-msg{padding:10px 14px;border-radius:var(--radius);font-size:.85rem;max-width:90%}
+.chat-msg.user{background:var(--accent);margin-left:auto}
+.chat-msg.ai{background:var(--bg-primary);margin-right:auto;border:1px solid var(--border)}
+.chat-input{display:flex;gap:8px}
+.suggestions{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--pad)}
+.suggestion-chip{padding:6px 12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:20px;font-size:.75rem;color:var(--text-secondary);cursor:pointer;transition:all .15s}
+.suggestion-chip:hover{border-color:var(--accent);color:var(--text-primary)}
+.setup-box{background:var(--bg-primary);padding:var(--pad);border-radius:var(--radius);border:1px solid var(--border)}
+.setup-box p{font-size:.8rem;color:var(--text-secondary);margin-bottom:var(--pad)}
+.hidden{display:none!important}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+</style>
+</head>
+<body>
+<div class="settings-overlay" id="settingsOverlay" onclick="toggleSettings()"></div>
+<div class="settings-panel" id="settingsPanel">
+<div class="settings-header">
+<div class="settings-title">Settings</div>
+<button class="btn-icon" onclick="toggleSettings()">X</button>
+</div>
+<div class="settings-content">
+<div class="setting-item">
+<label class="setting-label">Layout</label>
+<div class="setting-options">
+<button class="option-btn" data-layout="sidebar-right" onclick="setLayout(this)">Sidebar Right</button>
+<button class="option-btn" data-layout="sidebar-left" onclick="setLayout(this)">Sidebar Left</button>
+<button class="option-btn" data-layout="single" onclick="setLayout(this)">Single Column</button>
+</div>
+</div>
+<div class="setting-item">
+<label class="setting-label">Density</label>
+<div class="setting-options">
+<button class="option-btn" data-density="normal" onclick="setDensity(this)">Normal</button>
+<button class="option-btn" data-density="compact" onclick="setDensity(this)">Compact</button>
+</div>
+</div>
+<div class="setting-item">
+<label class="setting-label">Data</label>
+<div class="setting-options">
+<button class="option-btn" onclick="exportToJSON()">Export JSON</button>
+<button class="option-btn" onclick="document.getElementById('importFile').click()">Import JSON</button>
+<button class="option-btn btn-danger" onclick="clearAllData()">Clear All</button>
+</div>
+</div>
+</div>
+</div>
+<div class="container">
+<div class="top-bar">
+<div class="logo">Habit Tracker</div>
+<div style="display:flex;gap:8px;align-items:center;">
+<div class="nav-tabs">
+<button class="nav-tab active" data-tab="dashboard" onclick="switchTab(this)">Dashboard</button>
+<button class="nav-tab" data-tab="calendar" onclick="switchTab(this)">Calendar</button>
+<button class="nav-tab" data-tab="ai" onclick="switchTab(this)">AI Coach</button>
+</div>
+<button class="btn-icon" onclick="toggleSettings()">S</button>
+</div>
+</div>
+<div class="main-layout sidebar-right" id="mainLayout">
+<div class="main-content">
+<div class="tab-pane active" id="tab-dashboard">
+<div class="module">
+<div class="card">
+<div class="card-title"><div class="card-title-icon">V</div>Today Habits</div>
+<div class="habit-input-row">
+<input type="text" id="newHabit" placeholder="Add a new habit..." onkeypress="if(event.key=='Enter')addHabit()">
+<button class="btn" onclick="addHabit()">Add</button>
+</div>
+<div class="habit-list" id="habitList"></div>
+</div>
+</div>
+<div class="module">
+<div class="card">
+<div class="card-title"><div class="card-title-icon">S</div>Quick Stats</div>
+<div class="stats-grid" id="quickStats"></div>
+</div>
+</div>
+</div>
+<div class="tab-pane" id="tab-calendar">
+<div class="module">
+<div class="card">
+<div class="calendar-header">
+<div class="calendar-nav">
+<button class="btn-icon" onclick="changeMonth(-1)">&lt;</button>
+<div class="month-year" id="monthYear"></div>
+<button class="btn-icon" onclick="changeMonth(1)">&gt;</button>
+</div>
+<button class="btn btn-secondary btn-sm" onclick="goToToday()">Today</button>
+</div>
+<div class="calendar-grid" id="calendar"></div>
+<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
+<button class="btn btn-secondary btn-sm" onclick="exportToICS()">Export to Calendar</button>
+<input type="file" id="importFile" class="hidden" accept=".ics,.json" onchange="importFile(event)">
+<button class="btn btn-secondary btn-sm" onclick="document.getElementById('importFile').click()">Import File</button>
+</div>
+</div>
+</div>
+</div>
+<div class="tab-pane" id="tab-ai">
+<div class="module">
+<div class="card">
+<div class="card-title"><div class="card-title-icon">AI</div>AI Coach</div>
+<div id="aiSetup" class="setup-box">
+<p>Enter your OpenAI API key. New accounts get $5 free at openai.com.</p>
+<input type="password" id="apiKey" placeholder="sk-..." style="margin-bottom:10px;width:100%;">
+<select id="modelSelect" style="margin-bottom:12px;width:100%;">
+<option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+<option value="gpt-4o-mini">GPT-4o Mini</option>
+<option value="gpt-4">GPT-4</option>
+</select>
+<button class="btn" onclick="saveApiKey()" style="width:100%">Start AI Coach</button>
+</div>
+<div id="aiChat" class="hidden">
+<div class="chat-messages" id="chatMessages"></div>
+<div class="suggestions" id="suggestions"></div>
+<div class="chat-input">
+<input type="text" id="chatInput" placeholder="Ask about your habits..." onkeypress="if(event.keyCode==13)sendMessage()">
+<button class="btn" onclick="sendMessage()">Send</button>
+</div>
+<button class="btn btn-secondary btn-sm" onclick="clearApiKey()" style="width:100%;margin-top:8px;">Change API Key</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sidebar">
+<div class="module">
+<div class="card">
+<div class="card-title"><div class="card-title-icon">G</div>Stats</div>
+<div class="stats-grid" id="sidebarStats"></div>
+</div>
+</div>
+<div class="module">
+<div class="card">
+<div class="card-title"><div class="card-title-icon">?</div>Tips</div>
+<div style="font-size:0.8rem;color:var(--text-secondary);line-height:1.6;">
+<div style="margin-bottom:8px;">- Click dates to track past habits</div>
+<div style="margin-bottom:8px;">- Use AI Coach for advice</div>
+<div>- Export monthly to Google Calendar</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+let habits=JSON.parse(localStorage.getItem("ht_habits"))||[];
+let completions=JSON.parse(localStorage.getItem("ht_completions"))||{};
+let chatHistory=JSON.parse(localStorage.getItem("ht_chatHistory"))||[];
+let settings=JSON.parse(localStorage.getItem("ht_settings"))||{layout:"sidebar-right",density:"normal"};
+let currentDate=new Date();
+let selectedDate=new Date();
+let apiKey=localStorage.getItem("openai_api_key")||"";
+let apiModel=localStorage.getItem("openai_model")||"gpt-3.5-turbo";
+function init(){applySettings();render();}
+function applySettings(){
+document.body.classList.toggle("compact",settings.density==="compact");
+document.getElementById("mainLayout").className="main-layout "+settings.layout;
+document.querySelectorAll("[data-layout]").forEach(btn=>btn.classList.toggle("active",btn.dataset.layout===settings.layout));
+document.querySelectorAll("[data-density]").forEach(btn=>btn.classList.toggle("active",btn.dataset.density===settings.density));
+}
+function saveSettings(){localStorage.setItem("ht_settings",JSON.stringify(settings));applySettings();}
+function setLayout(btn){settings.layout=btn.dataset.layout;saveSettings();}
+function setDensity(btn){settings.density=btn.dataset.density;saveSettings();}
+function toggleSettings(){document.getElementById("settingsPanel").classList.toggle("open");document.getElementById("settingsOverlay").classList.toggle("open");}
+function switchTab(btn){let tab=btn.dataset.tab;document.querySelectorAll(".nav-tab").forEach(t=>t.classList.remove("active"));document.querySelectorAll(".tab-pane").forEach(p=>p.classList.remove("active"));btn.classList.add("active");document.getElementById("tab-"+tab).classList.add("active");}
+function getDateKey(date){return date.toISOString().split("T")[0];}
+function getStreak(habitId){let streak=0,checkDate=new Date();while(true){let dk=getDateKey(checkDate);if(completions[dk]&&completions[dk].includes(habitId)){streak++;checkDate.setDate(checkDate.getDate()-1);}else break;}return streak;}
+function saveData(){localStorage.setItem("ht_habits",JSON.stringify(habits));localStorage.setItem("ht_completions",JSON.stringify(completions));}
+function addHabit(){let input=document.getElementById("newHabit");let name=input.value.trim();if(!name)return;habits.push({id:Date.now().toString(),name:name,created:new Date().toISOString()});input.value="";saveData();render();}
+function deleteHabit(id){if(!confirm("Delete this habit?"))return;habits=habits.filter(h=>h.id!==id);Object.keys(completions).forEach(date=>{completions[date]=completions[date].filter(hid=>hid!==id);});saveData();render();}
+function toggleHabit(habitId,date){let dk=getDateKey(date);if(!completions[dk])completions[dk]=[];let idx=completions[dk].indexOf(habitId);if(idx>-1)completions[dk].splice(idx,1);else completions[dk].push(habitId);saveData();render();}
+function changeMonth(delta){currentDate.setMonth(currentDate.getMonth()+delta);renderCalendar();}
+function goToToday(){currentDate=new Date();selectedDate=new Date();render();}
+function selectDate(date){selectedDate=new Date(date);renderCalendar();renderHabits();}
+function saveApiKey(){let key=document.getElementById("apiKey").value.trim();let model=document.getElementById("modelSelect").value;if(!key){alert("Please enter an API key");return;}localStorage.setItem("openai_api_key",key);localStorage.setItem("openai_model",model);apiKey=key;apiModel=model;document.getElementById("aiSetup").classList.add("hidden");document.getElementById("aiChat").classList.remove("hidden");renderChat();addSuggestions();}
+function clearApiKey(){localStorage.removeItem("openai_api_key");localStorage.removeItem("openai_model");localStorage.removeItem("ht_chatHistory");apiKey="";apiModel="gpt-3.5-turbo";chatHistory=[];document.getElementById("aiSetup").classList.remove("hidden");document.getElementById("aiChat").classList.add("hidden");document.getElementById("apiKey").value="";}
+function addSuggestions(){let suggestions=["How can I improve my habits?","Why did I miss my habits?","Suggest 3 new habits","Analyze my progress"];let container=document.getElementById("suggestions");container.innerHTML="";suggestions.forEach(text=>{let chip=document.createElement("span");chip.className="suggestion-chip";chip.textContent=text;chip.onclick=()=>{document.getElementById("chatInput").value=text;sendMessage();};container.appendChild(chip);});}
+async function sendMessage(){let input=document.getElementById("chatInput");let text=input.value.trim();if(!text||!apiKey)return;chatHistory.push({role:"user",content:text});renderChat();input.value="";let typingDiv=document.createElement("div");typingDiv.className="ai-typing";typingDiv.textContent="AI is typing...";typingDiv.style="font-style:italic;color:var(--text-secondary);font-size:0.9rem;padding:8px;";document.getElementById("chatMessages").appendChild(typingDiv);document.getElementById("chatMessages").scrollTop=document.getElementById("chatMessages").scrollHeight;try{let habitContext="Habits: "+habits.map(h=>h.name+" (streak: "+getStreak(h.id)+")").join(", ")+". Total completions: "+Object.values(completions).reduce((a,b)=>a+b.length,0);let response=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+apiKey},body:JSON.stringify({model:apiModel,messages:[{role:"system",content:"You are a brief habit coach. "+habitContext},{role:"user",content:text}]})});let data=await response.json();typingDiv.remove();if(data.error)chatHistory.push({role:"assistant",content:"Error: "+data.error.message});else if(data.choices&&data.choices[0])chatHistory.push({role:"assistant",content:data.choices[0].message.content});else chatHistory.push({role:"assistant",content:"Sorry, I could not process that."});}catch(err){typingDiv.remove();chatHistory.push({role:"assistant",content:"Error: "+err.message});}localStorage.setItem("ht_chatHistory",JSON.stringify(chatHistory));renderChat();}
+function renderChat(){let container=document.getElementById("chatMessages");container.innerHTML="";chatHistory.forEach(msg=>{let div=document.createElement("div");div.className="chat-msg "+msg.role;div.textContent=msg.content;container.appendChild(div);});container.scrollTop=container.scrollHeight;}
+function exportToJSON(){let data={habits:habits,completions:completions,settings:settings,exportDate:new Date().toISOString()};downloadFile(JSON.stringify(data,null,2),"habit-tracker-backup-"+getDateKey(new Date())+".json","application/json");}
+function exportToICS(){let ics="BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//HabitTracker//EN\n";habits.forEach(h=>{Object.keys(completions).forEach(dk=>{if(completions[dk].includes(h.id)){let d=new Date(dk);let ds=d.toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";ics+="BEGIN:VEVENT\nDTSTART:"+ds+"\nDTEND:"+ds+"\nSUMMARY:"+h.name+"\nUID:"+h.id+"-"+dk+"@ht\nEND:VEVENT\n";}});});ics+="END:VCALENDAR";downloadFile(ics,"habits-"+currentDate.getFullYear()+"-"+(currentDate.getMonth()+1)+".ics","text/calendar");}
+function downloadFile(content,filename,type){let blob=new Blob([content],{type:type});let url=URL.createObjectURL(blob);let a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
+function importFile(e){let file=e.target.files[0];if(!file)return;let reader=new FileReader();reader.onload=function(ev){let content=ev.target.result;if(file.name.endsWith(".json")){try{let data=JSON.parse(content);if(data.habits)habits=data.habits;if(data.completions)completions=data.completions;if(data.settings)settings=Object.assign({},settings,data.settings);saveData();saveSettings();render();alert("Data imported successfully!");}catch(err){alert("Invalid JSON file");}}else if(file.name.endsWith(".ics")){let matches=content.match(/BEGIN:VEVENT[\s\S]*?END:VEVENT/g)||[];let count=0;let habitMap=new Map(habits.map(h=>[h.name.toLowerCase(),h.id]));matches.forEach(m=>{let sum=m.match(/SUMMARY:\s*(.+)/)?.[1]?.replace(/^✓\s*/,"");let dt=m.match(/DTSTART:\s*(\d{8})/)?.[1];if(sum&&dt){let dk=dt.slice(0,4)+"-"+dt.slice(4,6)+"-"+dt.slice(6,8);let id=habitMap.get(sum.toLowerCase());if(!id){id=Date.now()+"-"+Math.random().toString(36).slice(2);habits.push({id:id,name:sum,created:new Date().toISOString()});habitMap.set(sum.toLowerCase(),id);}if(!completions[dk])completions[dk]=[];if(!completions[dk].includes(id)){completions[dk].push(id);count++;}}});saveData();render();alert("Imported "+count+" entries!");}};reader.readAsText(file);e.target.value="";}
+function clearAllData(){if(!confirm("Clear ALL data? This cannot be undone!"))return;habits=[];completions={};chatHistory=[];saveData();localStorage.removeItem("ht_chatHistory");render();alert("All data cleared!");}
+function render(){renderCalendar();renderHabits();renderStats();if(apiKey){document.getElementById("aiSetup").classList.add("hidden");document.getElementById("aiChat").classList.remove("hidden");renderChat();addSuggestions();}}
+function renderCalendar(){let year=currentDate.getFullYear(),month=currentDate.getMonth();document.getElementById("monthYear").textContent=new Date(year,month).toLocaleDateString("en-US",{month:"long",year:"numeric"});let firstDay=new Date(year,month,1).getDay(),daysInMonth=new Date(year,month+1,0).getDate(),daysPrevMonth=new Date(year,month,0).getDate();let cal=document.getElementById("calendar");cal.innerHTML="";let days=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];days.forEach(d=>{cal.innerHTML+="<div class='day-label'>"+d+"</div>";});for(let i=firstDay-1;i>=0;i--){let day=daysPrevMonth-i;cal.appendChild(createDayCell(day,true,new Date(year,month-1,day)));}let today=new Date();for(let day=1;day<=daysInMonth;day++){let date=new Date(year,month,day);cal.appendChild(createDayCell(day,false,date,date.toDateString()===today.toDateString(),date.toDateString()===selectedDate.toDateString()));}let remaining=42-(firstDay+daysInMonth);for(let day=1;day<=remaining;day++){cal.appendChild(createDayCell(day,true,new Date(year,month+1,day)));}}
+function createDayCell(day,isOther,date,isToday,isSel){let div=document.createElement("div");div.className="calendar-day "+(isOther?"other-month ":"")+(isToday?"today ":"")+(isSel?"selected":"");div.onclick=()=>selectDate(date);let dk=getDateKey(date),done=completions[dk]||[];let dots="";for(let i=0;i<Math.min(done.length,5);i++)dots+="<div class='dot'></div>";div.innerHTML="<div>"+day+"</div><div class='day-dots'>"+dots+"</div>";return div;}
+function renderHabits(){let container=document.getElementById("habitList");let dk=getDateKey(selectedDate),done=completions[dk]||[];if(habits.length===0){container.innerHTML="<div class='empty-state'><div class='empty-state-icon'>?</div><div>No habits yet</div></div>";return;}container.innerHTML=habits.map(h=>{let isDone=done.includes(h.id),streak=getStreak(h.id);return "<div class='habit-item'><div class='habit-main'><div class='habit-check "+(isDone?"checked":"")+"' onclick='toggleHabit(\""+h.id+"\",selectedDate)'></div><div class='habit-name "+(isDone?"done":"")+"'>"+h.name+"</div></div><div class='habit-meta'>"+(streak>0?"<div class='habit-streak'>"+streak+"</div>":"")+"<button class='btn btn-danger btn-sm' onclick='deleteHabit(\""+h.id+"\")'>x</button></div></div>";}).join("");}
+function renderStats(){let total=habits.length,todayKey=getDateKey(new Date()),doneToday=(completions[todayKey]||[]).length,rate=total>0?Math.round(doneToday/total*100):0,bestStreak=0,totalDone=0;habits.forEach(h=>{let s=getStreak(h.id);if(s>bestStreak)bestStreak=s;});Object.values(completions).forEach(d=>totalDone+=d.length);let html="<div class='stat-card'><div class='stat-value'>"+total+"</div><div class='stat-label'>Habits</div></div><div class='stat-card'><div class='stat-value'>"+rate+"%</div><div class='stat-label'>Today</div></div><div class='stat-card'><div class='stat-value'>"+bestStreak+"</div><div class='stat-label'>Best Streak</div></div><div class='stat-card'><div class='stat-value'>"+totalDone+"</div><div class='stat-label'>Total Done</div></div>";document.getElementById("quickStats").innerHTML=html;document.getElementById("sidebarStats").innerHTML=html;}
+init();
+</script>
+</body>
+</html>
